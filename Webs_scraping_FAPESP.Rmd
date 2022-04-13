@@ -34,13 +34,13 @@ options(scipen = 999)
 
 # Primeiro passo - Raspando as informações sobre as receitas da FAPESP
 
-No próprio site da [FAPESP](https://fapesp.br/9250/evolucao-das-receitas) há uma seção com as estatisticas da instituição. Na seção que detalha as receitas da FAPESP há uma tabela contendo todas as receitas. Esta tabela (Figura 1) foi a primeira motivação para a raspagem dos dados
+No próprio site da [FAPESP](https://fapesp.br/9250/evolucao-das-receitas) há uma seção com as estatisticas da instituição. Na seção que detalha as receitas da FAPESP há uma tabela contendo todas as receitas. A tabela abaixo (Figura 1) foi a primeira motivação para a raspagem dos dados.
 
 
 ```{r echo=FALSE}
 knitr::include_graphics("Figuras/Figura_1.png")
 ```
-Para extrair os dados da tabela foi realizada a inspeção do HTML para verificar a forma de requisição. Na aba "rede" nota-se que o primeiro item **evolução-das-receitas** apresenta bastante requisições e tem um conteudo do tipo html. Ainda, ao inspecionar a aba "visualizar" notei que a tabela esta presente neste objeto, me dando indícios que a requisição deste item me permitiria chegar a tabela alvo. A requisição deste item é do tipo *GET* e o *Status* deve ser 200.          
+Para extrair os dados da tabela foi realizada a inspeção do HTML para verificar a forma de requisição. Na aba "rede" nota-se que o primeiro item **evolução-das-receitas** apresenta bastante requisições e tem um conteudo do tipo HTML. Ainda, ao inspecionar a aba "visualizar" notei que a tabela esta presente neste objeto, me dando indícios que a requisição deste item me permitiria chegar a tabela alvo. A requisição deste item é do tipo *GET* e o *Status* deve ser 200.          
 
 ```{r echo=FALSE}
 knitr::include_graphics("Figuras/Figura_2.png")
@@ -64,7 +64,7 @@ Conforme podemos observar, a requisição foi realizada com sucesso. Em seguida,
 knitr::include_graphics("Figuras/Figura_3.png")
 ```
 
-Após ler o html, busquei a tag **table** e, utilizadno a função *rvest::html_table* verifiquei que obtive sucesso em acessar a tabela de receitas da FAPESP. Contudo, ainda era necessário organizar a tabela visto que as colunas númerivas vieram como strings.  
+Após ler o HTML, busquei a tag **table** e, utilizando a função *html_table* do pacote *rvest* verifiquei que obtive sucesso em acessar a tabela de receitas da FAPESP. Contudo, ainda era necessário organizar a tabela visto que as colunas númerivas vieram como strings.  
 
 ```{r}
 # Scraping o html --------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ tb_fapesp <-
 head(tb_fapesp)
 ```
 
-Para limpeza da tabela foi utilizada funções para ajustar o nome das variáveis, extrair pontos entre os números e conversáo do tipo da variável. Após os ajustes,nota-se que as colunas agora apresentam tipo e nome adequado para análise.   
+Para limpeza da tabela foi utilizada funções para ajustar o nome das variáveis (utilizando o pacotes Janitor), extrair pontos entre os números (pacote Stringr) e conversáo do tipo da variável. Após os ajustes,nota-se que as colunas agora apresentam tipo e nome adequado para análise.   
 
 ```{r}
 # Arrumando a base de dados
@@ -120,7 +120,7 @@ Segue abaixo documentação tabela obtida:
 **total** = total da receita no ano;
 
 
-Por fim, foi criado um .csv da base de dados organizada.
+Por fim, foi criado um .csv da base de dados organizada para utilização futura.
 
 ```{r}
 # Criando um .csv  ----------------------------------------------------------------------------
@@ -132,12 +132,12 @@ fapesp_arrumada |>
 
 # Segundo passo - Raspando as informações sobre os despachos da FAPESP
 
-Ainda no site da FAPESP, mas agora na página onde se encontra as informações sobre [Prazos médios para análise e quantidade de propostas despachadas (2010 a 2019)](https://fapesp.br/estatisticas/analise) também há uma tabela (Figura 4). Esta tabela, em particular a parte que detalha todos os despachos foi a segunda motivação para a raspagem dos dados.
+Ainda no site da FAPESP, mas agora na página onde se encontra as informações sobre [Prazos médios para análise e quantidade de propostas despachadas (2010 a 2019)](https://fapesp.br/estatisticas/analise) também há uma tabela (Figura 4). Esta tabela, em particular a parte que detalha todos os despachos, foi a segunda motivação para a raspagem dos dados.
 
 ```{r echo=FALSE}
 knitr::include_graphics("Figuras/Figura_4.png")
 ```
-Em seguida, foi realizada a inspeção do HTML para verificar a forma de requisição. Na aba "rede" verifiquei que o primeiro item **https://fapesp.br/estatisticas/analise** também apresentava bastante requisições e tinha conteudo do tipo html, dando indício que a requisição deste item me daria a tabela alvo. A requisição deste item é do tipo *GET* e o *Status* deve ser 200.          
+Em seguida, foi realizada a inspeção do HTML para verificar a forma de requisição. Na aba "rede" verifiquei que o primeiro item **https://fapesp.br/estatisticas/analise** também apresentava um elevado número de requisições e tinha conteúdo do tipo HTML, dando indício que a requisição deste item me daria a tabela alvo. A requisição deste item é do tipo *GET* e o *Status* deve ser 200.          
 
 ```{r echo=FALSE}
 knitr::include_graphics("Figuras/Figura_5.png")
@@ -155,13 +155,13 @@ get_url_fapesp_despacho <- httr::GET(url_fapesp_despacho)
 get_url_fapesp_despacho
 ```
 
-Conforme podemos observar, a requisição foi realizada com sucesso. Desta vez, a requisição devolvia um json. Em seguida inspecionei o HMTL e, novamente, busquei a tag **table** conforme identificado na página (Figure 6) e a tabela anteriormente extraida.
+Conforme podemos observar, a requisição foi realizada com sucesso, ou seja, *status* 200. Desta vez, a requisição devolvia um json. Em seguida inspecionei o HMTL e, novamente, busquei a tag **table** conforme identificado na página (Figure 6) e a tabela anteriormente extraida.
 
 ```{r echo=FALSE}
 knitr::include_graphics("Figuras/Figura_6.png")
 ```
 
-Já com o exemplo da tabela anterior, fiz a checagem do html e busquei a tag **table** utilizando a função *rvest::html_table* e, novamente, obtive sucesso em acessar a tabela que, assim como a outra tabela, também precisa de uma faxina.  
+Após checar a tag **table** utilizando a função *html_table*  do pacote *rvest*, novamente, obtive sucesso em acessar a tabela que, assim como a outra tabela, também precisa de uma faxina.  
 
 ```{r}
 
@@ -178,7 +178,7 @@ head(get_url_fapesp_despacho)
 
 ```
 
-Para limpeza da tabela foi utilizada funções para ajustar o nome das variáveis, extrair pontos entre os números e conversáo do tipo da variável e pivotagem. Após os ajustes pode-se observar que as colunas agora apresentam tipo e nome adequado para análise do total de despachos por ano. 
+Para limpeza da tabela foi utilizada funções para ajustar o nome das variáveis (utilizando o pacote Janitor), extrair pontos entre os números (utilizando o pacote Stringr), conversáo do tipo da variável e, por fim, uma pivotagem (utilizando o pacote Tidyr). Após os ajustes pode-se observar que as colunas agora apresentam tipo e nome adequado para análise do total de despachos por ano. 
 
 ```{r}
 # Arrumando a base - TOTAL DE DESPACHOS
@@ -219,7 +219,7 @@ Segue abaixo documentação tabela obtida:
 
 **Quantidade** = quantidade total ;
 
-Por fim, foi criado um .csv da base de dados organizada.
+Por fim, foi criado um .csv da base de dados organizada para análise.
 
 ```{r}
 # Criando um .csv -----------------------------------------------------------------------------
@@ -294,9 +294,9 @@ g
 
 ```
 
-# Quantidade e prazo média em dias para despacho de resultados da FAPESP
+# Quantidade e prazo médio (em dias) para despacho de resultados da FAPESP
 
-Com o aumento das receitas anuais é de se esperar que a FAPESP apresente também uma elevada demanda de trabalho para avaliar e responder a pesquisadores fazendo pedidos de financiamento.
+Com o aumento das receitas anuais é de se esperar que a FAPESP apresente também uma elevada demanda de trabalho para avaliar e responder a pesquisadores do estado de São Paulo fazendo pedidos de financiamento.
 Realmente, podemos observar uma quantidade elevada de despachos pela FAPESP. Esses despachos acontecem em aproximadamente 70-60 dias após a submissão. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -360,25 +360,10 @@ g3 <-
 g3
 
 ```
+
 # CONSIDERAÇÕES FINAIS
 
-Após realizada a raspagem das informações podemos observar o crescente aumento da receita da FAPESP, mostrando um incentivo do estado na pesquisa cientítica. Cumpre destacar que mesmo nos 2 últimos anos, com as incertezas causadas pela pandemia da COVID-19 e cortes do governo federal ainda assim houve um aumento da receita. É claro esses aumentos demonstram incentivo do estado, mas numa perspectiva de desenvolvimento do país e considerando que o estado de São Paulo tem uma das maiores arrecadações do país, não é nada demais especular maiores investimentos do que os atuais 1%.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Após realizada a raspagem das informações podemos observar o crescente aumento da receita da FAPESP, mostrando um incentivo do estado na pesquisa cientítica. Cumpre destacar que mesmo nos 2 últimos anos, com as incertezas causadas pela pandemia da COVID-19 e cortes do governo federal, ainda assim houve um aumento da receita. É claro que esses aumentos demonstram um incentivo do estado, mas numa perspectiva de desenvolvimento do país e considerando que o estado de São Paulo tem uma das maiores arrecadações do país, não é nada demais especular maiores investimentos do que os atuais 1% para que possamos, de fato, *ALAVANCAR A CIÊNCIA BRASILEIRA QUE CONTA COM PESQUISADORES GENIAIS E RECONHECIDOS MUNDIALMENTE*.
 
 
 
