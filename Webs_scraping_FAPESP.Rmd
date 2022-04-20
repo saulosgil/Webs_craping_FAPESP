@@ -24,6 +24,9 @@ library(tidyverse)
 library(httr)
 library(xml2)
 library(rvest)
+library(viridis)
+library(janitor)
+library(knitr)
 
 #  Tirar conotação cientifica ------------------------------------------------------------------
 
@@ -38,12 +41,12 @@ No próprio site da [FAPESP](https://fapesp.br/9250/evolucao-das-receitas) há u
 
 
 ```{r echo=FALSE}
-knitr::include_graphics("Figuras/Figura_1.png")
+include_graphics("Figuras/Figura_1.png")
 ```
 Para extrair os dados da tabela foi realizada a inspeção do HTML para verificar a forma de requisição. Na aba "rede" nota-se que o primeiro item **evolução-das-receitas** apresenta bastante requisições e tem um conteudo do tipo HTML. Ainda, ao inspecionar a aba "visualizar" notei que a tabela esta presente neste objeto, me dando indícios que a requisição deste item me permitiria chegar a tabela alvo. A requisição deste item é do tipo *GET* e o *Status* deve ser 200.          
 
 ```{r echo=FALSE}
-knitr::include_graphics("Figuras/Figura_2.png")
+include_graphics("Figuras/Figura_2.png")
 ```
 
 ```{r}
@@ -51,7 +54,7 @@ knitr::include_graphics("Figuras/Figura_2.png")
 
 url_fapesp <- "https://fapesp.br/9250/evolucao-das-receitas"
 
-get_url_fapesp <- httr::GET(url_fapesp)
+get_url_fapesp <- GET(url_fapesp)
 
 # verificando status da requisição
 
@@ -61,7 +64,7 @@ get_url_fapesp
 Conforme podemos observar, a requisição foi realizada com sucesso. Em seguida, ainda nas ferramentas de desenvolvedor, mas agora na aba **elementos**, ao clicar na tabela, identifiquei a tag **table** (Figure 3) e, investi uma tentativa nela para ver se conseguia extrair a tabela.
 
 ```{r echo=FALSE}
-knitr::include_graphics("Figuras/Figura_3.png")
+include_graphics("Figuras/Figura_3.png")
 ```
 
 Após ler o HTML, busquei a tag **table** e, utilizando a função *html_table* do pacote *rvest* verifiquei que obtive sucesso em acessar a tabela de receitas da FAPESP. Contudo, ainda era necessário organizar a tabela visto que as colunas númerivas vieram como strings.  
@@ -73,7 +76,7 @@ tb_fapesp <-
   get_url_fapesp |>
   read_html() |>
   xml_find_all(xpath = "//table") |>
-  rvest::html_table(header = TRUE)
+  html_table(header = TRUE)
 
 head(tb_fapesp)
 ```
@@ -84,7 +87,7 @@ Para limpeza da tabela foi utilizada funções para ajustar o nome das variávei
 # Arrumando a base de dados
 
 fapesp_arrumada <- tb_fapesp[[1]] |>
-  janitor::clean_names() |> # arrumando os nomes
+  clean_names() |> # arrumando os nomes
   mutate( # tirando o ponto dos vetores de caracteres para converter em numeric
     transferencias_do_tesouro = as.numeric(str_remove_all(transferencias_do_tesouro,
                                                           pattern = "[.]")),
@@ -95,10 +98,7 @@ fapesp_arrumada <- tb_fapesp[[1]] |>
     reversao_de_diferimento_de_receitas_saldos_de_exercicios_anteriores = as.numeric(str_remove_all(reversao_de_diferimento_de_receitas_saldos_de_exercicios_anteriores,
                                                                                                     pattern = "[.]")),
     total = as.numeric(str_remove_all(total,
-                                      pattern = "[.]"))
-  ) |>
-  dplyr::mutate(
-    total = total/1000000,
+                                      pattern = "[.]"))/1000000
   )
 
 glimpse(fapesp_arrumada)
@@ -135,12 +135,12 @@ fapesp_arrumada |>
 Ainda no site da FAPESP, mas agora na página onde se encontra as informações sobre [Prazos médios para análise e quantidade de propostas despachadas (2010 a 2019)](https://fapesp.br/estatisticas/analise) também há uma tabela (Figura 4). Esta tabela, em particular a parte que detalha todos os despachos, foi a segunda motivação para a raspagem dos dados.
 
 ```{r echo=FALSE}
-knitr::include_graphics("Figuras/Figura_4.png")
+include_graphics("Figuras/Figura_4.png")
 ```
 Em seguida, foi realizada a inspeção do HTML para verificar a forma de requisição. Na aba "rede" verifiquei que o primeiro item **https://fapesp.br/estatisticas/analise** também apresentava um elevado número de requisições e tinha conteúdo do tipo HTML, dando indício que a requisição deste item me daria a tabela alvo. A requisição deste item é do tipo *GET* e o *Status* deve ser 200.          
 
 ```{r echo=FALSE}
-knitr::include_graphics("Figuras/Figura_5.png")
+include_graphics("Figuras/Figura_5.png")
 ```
 
 ```{r}
@@ -148,7 +148,7 @@ knitr::include_graphics("Figuras/Figura_5.png")
 
 url_fapesp_despacho <- "https://fapesp.br/estatisticas/analise"
 
-get_url_fapesp_despacho <- httr::GET(url_fapesp_despacho)
+get_url_fapesp_despacho <- GET(url_fapesp_despacho)
 
 # verificando status da requisição
 
@@ -158,7 +158,7 @@ get_url_fapesp_despacho
 Conforme podemos observar, a requisição foi realizada com sucesso, ou seja, *status* 200. Desta vez, a requisição devolvia um json. Em seguida inspecionei o HMTL e, novamente, busquei a tag **table** conforme identificado na página (Figure 6) e a tabela anteriormente extraida.
 
 ```{r echo=FALSE}
-knitr::include_graphics("Figuras/Figura_6.png")
+include_graphics("Figuras/Figura_6.png")
 ```
 
 Após checar a tag **table** utilizando a função *html_table*  do pacote *rvest*, novamente, obtive sucesso em acessar a tabela que, assim como a outra tabela, também precisa de uma faxina.  
@@ -171,8 +171,8 @@ get_url_fapesp_despacho <-
   get_url_fapesp_despacho |>
   read_html() |>
   xml_find_all(xpath = "//table") |>
-  rvest::html_table(header = TRUE) |>
-  purrr::pluck(1)
+  html_table(header = TRUE) |>
+  pluck(1)
 
 head(get_url_fapesp_despacho)
 
@@ -185,7 +185,7 @@ Para limpeza da tabela foi utilizada funções para ajustar o nome das variávei
 
 total_despachos <-
    get_url_fapesp_despacho[1:2,2:12] |>
-   janitor::clean_names() |>
+   clean_names() |>
    mutate(
      x2010 = as.numeric(x2010),
      x2011 = as.numeric(x2011),
@@ -241,54 +241,54 @@ df <- readr::read_csv("adjusted_data/fapesp_receitas_1994_2021.csv")
 
 g <-
   df |>
-  ggplot2::ggplot(ggplot2::aes(x = as.character(exercicios))) +
-  ggplot2::geom_col(
-    ggplot2::aes(y = total),
+  ggplot(aes(x = as.character(exercicios))) +
+  geom_col(
+    aes(y = total),
     size = 1,
     fill = "blue",
     alpha = .4
   ) +
-  ggplot2::geom_line(
-    ggplot2::aes(y = total),
+  geom_line(
+    aes(y = total),
     group = 1,
     size = 3.5,
     color = "white"
   ) +
-  ggplot2::geom_line(
-    ggplot2::aes(y = total,
-                 lty = "Evolução anual das Receitas - 1994 a 2011(R$)"),
+  geom_line(
+    aes(y = total,
+        lty = "Evolução anual das Receitas - 1994 a 2011(R$)"),
     group = 1,
     size = 1.2,
     color = "blue"
   ) +
-  ggplot2::scale_y_continuous("Milhões de reais (R$)") +
-  ggplot2::theme(
-    text = ggplot2::element_text(size = 20, family = "Times New Roman"),
-    axis.title.x = ggplot2::element_blank(),
-    axis.title.y.left = ggplot2::element_text(size = 12),
-    axis.ticks.y = ggplot2::element_blank(),
-    panel.background = ggplot2::element_rect(fill = "white"),
-    axis.line.x.bottom = ggplot2::element_line(size = 1),
-    axis.line.y.left = ggplot2::element_line(size = 1),
-    panel.grid.major.y = ggplot2::element_line(size = 0.5, color = "gray95"),
-    panel.grid.minor.y = ggplot2::element_line(size = 0.5, color = "gray95"),
-    axis.text.y = ggplot2::element_text(size = 12),
-    axis.text.x = ggplot2::element_text(
-      size = 12,
-      angle = 45,
-      hjust = 1
+  scale_y_continuous("Milhões de reais (R$)") +
+  theme(
+    text = element_text(size = 20, family = "Times New Roman"),
+    axis.title.x = element_blank(),
+    axis.title.y.left = element_text(size = 12),
+    axis.ticks.y = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    axis.line.x.bottom = element_line(size = 1),
+    axis.line.y.left = element_line(size = 1),
+    panel.grid.major.y = element_line(size = 0.5, color = "gray95"),
+    panel.grid.minor.y = element_line(size = 0.5, color = "gray95"),
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(
+    size = 12,
+    angle = 45,
+    hjust = 1
     ),
-    axis.ticks.x = ggplot2::element_line(size = 1),
-    axis.ticks.y.left = ggplot2::element_line(size = 1),
-    axis.ticks.length = ggplot2::unit(.25, "cm"),
-    legend.text = ggplot2::element_text(size = 18),
-    legend.key = ggplot2::element_blank(),
-    legend.title = ggplot2::element_blank(),
+    axis.ticks.x = element_line(size = 1),
+    axis.ticks.y.left = element_line(size = 1),
+    axis.ticks.length = unit(.25, "cm"),
+    legend.text = element_text(size = 18),
+    legend.key = element_blank(),
+    legend.title = element_blank(),
     legend.position = "top",
     legend.justification = "center",
-    plot.caption = ggplot2::element_text(size = 12, color = "gray50"),
+    plot.caption = element_text(size = 12, color = "gray50"),
   ) +
-  ggplot2::labs(caption = "https://fapesp.br/9250/evolucao-das-receitas")
+  labs(caption = "https://fapesp.br/9250/evolucao-das-receitas")
 
 g
 
@@ -310,53 +310,53 @@ df2 <- read.csv(file = "adjusted_data/fapesp_despachos_2010-2019.csv",
 
 g2 <-
   df2 |>
-    dplyr::filter(despachos == "Quantidade") |>
-    ggplot2::ggplot(ggplot2::aes(
+    filter(despachos == "Quantidade") |>
+    ggplot(aes(
     x = as.factor(Ano),
     y = Quantidade,
     colour = "white",
     fill = Ano
   )) +
-  ggplot2::geom_col(show.legend = FALSE) +
-  viridis::scale_color_viridis(discrete = TRUE) +
-  viridis::scale_fill_viridis(discrete = FALSE) +
-  ggplot2::labs(title = "TOTAL DE DESPACHOS REALIZADOS PELA FAPESP",
+  geom_col(show.legend = FALSE) +
+  scale_color_viridis(discrete = TRUE) +
+  scale_fill_viridis(discrete = FALSE) +
+  labs(title = "TOTAL DE DESPACHOS REALIZADOS PELA FAPESP",
        subtitle = "De 2010 à 2019") +
-  ggplot2::xlab("Ano") +
-  ggplot2::theme_classic() +
-  ggplot2::theme(text = ggplot2::element_text(size = 12,
+  xlab("Ano") +
+  theme_classic() +
+  theme(text = element_text(size = 20,
                                      family = "Times New Roman"),
-        plot.title = ggplot2::element_text(hjust = 0.5),
-        plot.subtitle = ggplot2::element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
 g2
 
 # Prazo m?dio para o Despacho
 
 g3 <-
   df2 |>
-  dplyr::filter(despachos == "Prazo médio (dias)") |>
-  dplyr::mutate(
+  filter(despachos == "Prazo médio (dias)") |>
+  mutate(
     Quantidade = Quantidade/1000
   ) |>
-  ggplot2::ggplot(ggplot2::aes(
+  ggplot(aes(
     x = as.factor(Ano),
     y = Quantidade,
     colour = "white",
     fill = Ano
   )) +
-  ggplot2::geom_col(show.legend = FALSE) +
-  viridis::scale_color_viridis(discrete = TRUE) +
-  viridis::scale_fill_viridis(discrete = FALSE) +
-  ggplot2::labs(title = "PRAZO MÉDIO (DIAS) PARA DESPACHO REALIZADOS PELA FAPESP",
+  geom_col(show.legend = FALSE) +
+  scale_color_viridis(discrete = TRUE) +
+  scale_fill_viridis(discrete = FALSE) +
+  labs(title = "PRAZO M?DIO (DIAS) PARA DESPACHO REALIZADOS PELA FAPESP",
        subtitle = "De 2010 à 2019",
        caption = "https://fapesp.br/estatisticas/analise") +
-  ggplot2::xlab("Ano") +
-  ggplot2::ylab("Número de dias") +
-  ggplot2::theme_classic() +
-  ggplot2::theme(text = ggplot2::element_text(size = 12,
+  xlab("Ano") +
+  ylab("Número de dias") +
+  theme_classic() +
+  theme(text = element_text(size = 20,
                                      family = "Times New Roman"),
-        plot.title = ggplot2::element_text(hjust = 0.5),
-        plot.subtitle = ggplot2::element_text(hjust = 0.5))
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
 g3
 
 ```

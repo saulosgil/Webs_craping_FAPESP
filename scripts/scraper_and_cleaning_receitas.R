@@ -3,6 +3,7 @@ library(tidyverse)
 library(httr)
 library(xml2)
 library(rvest)
+library(janitor)
 
 #  Tirar notação cientifica -------------------------------------------------------------------
 
@@ -12,7 +13,7 @@ options(scipen = 999)
 
 url_fapesp <- "https://fapesp.br/9250/evolucao-das-receitas"
 
-get_url_fapesp <- httr::GET(url_fapesp)
+get_url_fapesp <- GET(url_fapesp)
 
 # verificando status da requisição
 
@@ -25,12 +26,12 @@ tb_fapesp <-
   get_url_fapesp |>
   read_html() |>
   xml_find_all(xpath = "//table") |>
-  rvest::html_table(header = TRUE)
+  html_table(header = TRUE)
 
 # Arrumando a base de dados
 
 fapesp_arrumada <- tb_fapesp[[1]] |>
-  janitor::clean_names() |> # arrumando os nomes
+  clean_names() |> # arrumando os nomes
   mutate( # tirando o ponto dos vetores de caracteres para converter em numeric
     transferencias_do_tesouro = as.numeric(str_remove_all(transferencias_do_tesouro,
                                                           pattern = "[.]")),
@@ -41,10 +42,7 @@ fapesp_arrumada <- tb_fapesp[[1]] |>
     reversao_de_diferimento_de_receitas_saldos_de_exercicios_anteriores = as.numeric(str_remove_all(reversao_de_diferimento_de_receitas_saldos_de_exercicios_anteriores,
                                                                                                     pattern = "[.]")),
     total = as.numeric(str_remove_all(total,
-                                      pattern = "[.]"))
-  ) |>
-  dplyr::mutate(
-    total = total/1000000,
+                                      pattern = "[.]"))/1000000
   )
 
 # Criando um .csv  ----------------------------------------------------------------------------

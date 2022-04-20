@@ -3,6 +3,7 @@ library(tidyverse)
 library(httr)
 library(xml2)
 library(rvest)
+library(janitor)
 
 #  Tirar notação cientifica -------------------------------------------------------------------
 
@@ -12,7 +13,7 @@ options(scipen = 999)
 
 url_fapesp_despacho <- "https://fapesp.br/estatisticas/analise"
 
-get_url_fapesp_despacho <- httr::GET(url_fapesp_despacho)
+get_url_fapesp_despacho <- GET(url_fapesp_despacho)
 
 # verificando status da requisição
 
@@ -24,14 +25,14 @@ get_url_fapesp_despacho <-
   get_url_fapesp_despacho |>
   read_html() |>
   xml_find_all(xpath = "//table") |>
-  rvest::html_table(header = TRUE) |>
-  purrr::pluck(1)
+  html_table(header = TRUE) |>
+  pluck(1)
 
 # Arrumando a base - TOTAL DE DESPACHOS
 
 total_despachos <-
    get_url_fapesp_despacho[1:2,2:12] |>
-   janitor::clean_names() |>
+   clean_names() |>
    mutate(
      x2010 = as.numeric(x2010),
      x2011 = as.numeric(x2011),
